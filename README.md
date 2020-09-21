@@ -1,5 +1,9 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+For Test login use 
+username- gourav
+pass- gouravpass
 
+testing date for entry info= 17 june 2020
 ## Available Scripts
 
 In the project directory, you can run:
