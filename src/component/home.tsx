@@ -15,7 +15,7 @@ import Button from 'react-bootstrap/Button';
 import Popover from 'react-bootstrap/Popover';
 import questionSet from './../DB/question';
 import Form from 'react-bootstrap/Form';
-
+import Modal from 'react-bootstrap/Modal';
 interface Props {
     userName: string;
 }
@@ -25,9 +25,9 @@ export class Home extends Component<any, any> {
         super(props);
         this.onSelectDropdownMonth = this.onSelectDropdownMonth.bind(this);
         this.onSelectDropdownYear = this.onSelectDropdownYear.bind(this);
-        this.onSelectDropdownEntryOccassion= this.onSelectDropdownEntryOccassion.bind(this);
-        this.onSelectDropdownEntryTime= this.onSelectDropdownEntryTime.bind(this);
-        this.handleEntrySubmit= this.handleEntrySubmit.bind(this);
+        this.onSelectDropdownEntryOccassion = this.onSelectDropdownEntryOccassion.bind(this);
+        this.onSelectDropdownEntryTime = this.onSelectDropdownEntryTime.bind(this);
+        this.handleEntrySubmit = this.handleEntrySubmit.bind(this);
     }
 
     state = {
@@ -41,7 +41,10 @@ export class Home extends Component<any, any> {
         entryStatus: false,
         entryDetails: '',
         createEntryStatus: false,
-        createEntryDetails: {}
+        createEntryDetails: {},
+        isEntryExist:false,
+        selectedEntryOccasion:'',
+        selectedEntryTime:''
     }
     componentDidMount() {
         this.setState({ mainCompleteQuestions: questionSet.questionSet });
@@ -165,48 +168,148 @@ export class Home extends Component<any, any> {
     }
     //function to check the entry
     checkEntry(d: any, month: any, year: any) {
-        this.setState({ entryDetails: "", entryStatus: false });
+        this.setState({ entryDetails: "", isEntryExist:false, selectedEntryOccasion:'', selectedEntryTime:'' });
+
         //console.log("questionSet",this.state.mainCompleteQuestions);
-        let userObj: any = this.state.mainCompleteQuestions.filter((i: any) => { return i.username.toLowerCase() == this.state.loggedUsername.toLowerCase() })
+        let userObj: any = this.state.mainCompleteQuestions.filter((i: any) => { return i.username == this.state.loggedUsername })
+        // let tempObj= [];
+        // tempObj.push(userObj);
+        // this.setState({mainCompleteQuestions:tempObj});
+        if(this.state.mainCompleteQuestions .length ==1){
+            userObj=this.state.mainCompleteQuestions;
+        }
         console.log("questionSet", userObj);
-        if (userObj) {
+        if (userObj.length>0) {
             userObj[0].calendarinvite.map((i: any) => {
-                if (i.dateObj.date == d) {
-                    if (i.dateObj.month.toLowerCase() == month.toLowerCase()) {
-                        if (i.dateObj.year == year) {
-                            //alert("there is a entry")
-                            this.setState({ entryStatus: true });
-                            let entryDetails = this.state.entryDetails;
-                            entryDetails += i.occassion + "   " + i.timeStamp;
-                            this.setState({ entryDetails: entryDetails });
-                            return true;
-                        }
-                    }
+                console.log(i.dateObj.date,i.dateObj.month.toLowerCase(), i.dateObj.year.toString(), d, month.toLowerCase(), year );
+                if (i.dateObj.date == d && i.dateObj.month.toLowerCase() == month.toLowerCase() && i.dateObj.year.toString() == year) {
+                    //alert("there is a entry");
+                    this.setState({entryDetails:""});
+                    this.setState({ entryStatus: true,isEntryExist:true});
+                    let entryDetails = this.state.entryDetails;
+                    entryDetails = i.occassion + "   " + i.timeStamp;
+                    this.setState({ entryDetails: entryDetails });
+                    console.log(this.state.entryStatus, this.state.isEntryExist, this.state.entryDetails, entryDetails);
+                    return true;
                 }
+                // else{
+                //     console.log("else",this.state.entryStatus, this.state.isEntryExist, this.state.entryDetails);
+                //     //this.setState({isEntryExist:false})
+                // }
+                    
             })
         }
     }
+    //Modal called function on date click
+    // showModalComp = (e: any) => {
+    //     console.log("eeeeeeeeeeeeeeeeeee",e);
+    //     return(
+    //         <this.Popover />
+    //     )
+    // }
+    //Show modal for entry
+    ModalPop = (props: any) => {
+        return (
+            <Modal show={this.state.entryStatus} onHide={() => this.setState({entryStatus:false})} dialogClassName="modal-90w"
+            aria-labelledby="example-custom-modal-styling-title">
+                <Modal.Header closeButton>
+                <Modal.Title>{this.state.selectedDate}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {
+                        this.state.isEntryExist ?
+                            <h4>Your Entries: <h5>{this.state.entryDetails}</h5></h4>
+                            :
+                            <div>
+                                <h4>OOPS! You don't have any entry.</h4>
+                                <Button className="success" onClick={() => this.setState({ createEntryStatus: !this.state.createEntryStatus })}>Create a Entry!</Button>
+                            </div>
+                    }
+                    {
+                        this.state.createEntryStatus?
+                        <Form style={{ border: "1px solid #999", borderRadius: '15px', padding: '1rem', margin: '1rem', textAlign: 'left' }}>
+                        <h3>Fill the Required Details</h3>
+                        <hr />
+                        <Container>
+                            <Row>
+                                <Col>
+                                    <Form.Group controlId="formBasicEmail">
+                                        <DropdownButton title="Select Occassion" onSelect={(e) => { this.onSelectDropdownEntryOccassion(e) }}>
+                                            <Dropdown.Item eventKey={'Birthday'}>BirthDay</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'Meeting'}>Meeting</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'Party'}>Party</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'Trip'}>Trip</Dropdown.Item>
+                                        </DropdownButton>
+                                    </Form.Group>
+                                </Col>
+                                <Col>
+                                    <Form.Group controlId="formBasicPassword">
+                                        <DropdownButton title="Select TimeSlot" onSelect={(e) => { this.onSelectDropdownEntryTime(e) }}>
+                                            <Dropdown.Item eventKey={'3:00am-4:00am'}>3:00am-4:00am</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'6:00am-7:00am'}>6:00am-7:00am</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'2:00am-4:00am'}>2:00am-4:00am</Dropdown.Item>
+                                            <Dropdown.Item eventKey={'1:00am-6:00am'}>1:00am-6:00am</Dropdown.Item>
+                                        </DropdownButton>
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+                        </Container>
+                        <Button variant="primary" type="submit" onClick={this.handleEntrySubmit}>
+                            Save
+                        </Button>
+                    </Form>:
+                    null
+                }
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary">
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    };
     //on day click
     onDayClick = (e: any, d: any) => {
-        console.log("click date details", e, d, this.month(), this.year());
+        //this.setState({ entryStatus: false });
+        //console.log("click date details", e, d, this.month(), this.year());
         this.setState({ selectedDate: d + " " + this.month() + " " + this.year() });
         this.checkEntry(d, this.month(), this.year());
-    }
-
-    //Create a new entry
-    createEntry = (e:any) => {
-        this.setState({ createEntryStatus: true });
+        this.setState({ entryStatus: true });
+        //this.showModalComp(e);
     }
     //on select dropdown for entry occassion
-    onSelectDropdownEntryOccassion=(e:any)=>{
+    onSelectDropdownEntryOccassion = (e: any) => {
         console.log(e);
+        this.setState({selectedEntryOccasion:e});
+
     }
-    onSelectDropdownEntryTime=(e:any)=>{
-        console.log(e)
+    onSelectDropdownEntryTime = (e: any) => {
+        console.log(e);
+        this.setState({selectedEntryTime:e});
     }
     //code for on entry 
-    handleEntrySubmit=(e:any)=>{
-        console.log(e);
+    handleEntrySubmit = (e: any) => {
+        console.log(this.state.entryDetails);
+        let entry= this.state.selectedEntryOccasion+" "+ this.state.selectedEntryTime;
+        console.log(entry);
+        let Obj={
+            dateObj: {
+                date: this.state.selectedDate.split(' ')[0], 
+                month: this.month(), 
+                year: this.year()
+            },
+            occassion: this.state.selectedEntryOccasion,
+            timeStamp: this.state.selectedEntryTime
+        }
+        let tempArray:any=[];
+        tempArray.push(this.state.mainCompleteQuestions[0]) ;
+        tempArray[0].calendarinvite.push(Obj);
+        this.setState({mainCompleteQuestions: tempArray, createEntryStatus:false});
+        setTimeout(() => {
+            console.log(" the main data for saving is ", this.state.mainCompleteQuestions);
+            alert("Entry saved! ")
+        }, 100);
     }
     render() {
         // Mapping done for displaying the weekdays as Sun, mon, tues
@@ -221,53 +324,12 @@ export class Home extends Component<any, any> {
             blanks.push(<td key={i * 10} className="blankDay">{''}</td>)
         }
         //console.log('blanks', blanks);
-        //Popop
-        const popover = (
-            <Popover id="popover-basic">
-                <Popover.Title as="h3">{this.state.selectedDate}</Popover.Title>
-                {
-                    this.state.entryStatus ?
-                        <Popover.Content>
-                            {this.state.entryDetails}
-                        </Popover.Content> :
-                        <Popover.Content>
-                            OOPS! You don't have any entry.
-                        <Button className="success" onClick={(e) => this.createEntry(e)}>Create a Entry!</Button>
-                            <Form onSubmit={this.handleEntrySubmit} style={{ border: "1px solid #999", borderRadius: '15px', padding: '1rem', margin: '1rem', textAlign: 'left' }}>
-                                <h3>Fill the Required Details</h3>
-                                <hr />
-                                <Form.Group controlId="formBasicEmail">
-                                    <DropdownButton title="Select Occassion" onSelect={(e) => { this.onSelectDropdownEntryOccassion(e) }}>
-                                        <this.SelectList data={this.months} />
-                                    </DropdownButton>
-                                </Form.Group>
-
-                                <Form.Group controlId="formBasicPassword">
-                                    <DropdownButton title="Select TimeSlot" onSelect={(e) => { this.onSelectDropdownEntryTime(e) }}>
-                                        <this.SelectList data={this.months} />
-                                    </DropdownButton>
-                                </Form.Group>
-                                <Form.Group controlId="formBasicCheckbox">
-                                    <Form.Check type="checkbox" label="Check me out" />
-                                </Form.Group>
-                                <Button variant="primary" type="submit">
-                                    Save
-                                </Button>
-                            </Form>
-                        </Popover.Content>
-
-                }
-
-            </Popover>
-        );
         // code for getting all the date details for a month
         let daysInMonth = [];
         for (let d = 1; d <= this.daysInMonth(); d++) {
             let className = (d == parseInt(this.currentDay()) ? "day current-day" : 'day');
             daysInMonth.push(<td key={d} className={className} onClick={(e) => this.onDayClick(e, d)}>
-                <OverlayTrigger trigger="click" placement="right" overlay={popover}>
-                    <span>{d}</span>
-                </OverlayTrigger>
+                <span>{d}</span>
             </td>
             )
         }
@@ -304,7 +366,12 @@ export class Home extends Component<any, any> {
         //console.log('trElems', trElems);
 
         return (
+
             <div>
+                {
+                    this.state.entryStatus?<this.ModalPop />:null
+                }
+                
                 <br />
                 <Container>
                     <Row>
