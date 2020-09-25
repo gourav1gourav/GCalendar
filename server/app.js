@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 const path = require('path');
-const connections= require('./../DB/connection');
+//const connections= require('./../DB/connection');
 const UserCalendar= require('../src/All_API/user');
 const bodyParser = require("body-parser");
 const route= express.Router();
@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 
 app.use('/', route);
 console.log("*****************************************************",UserCalendar.userCalendarfun);
-connections.connectDB();
+//connections.connectDB();
 // This responds with "Hello World" on the homepage
 app.get('/test', function (req, res) {
    console.log("Got a GET request for the homepage");
